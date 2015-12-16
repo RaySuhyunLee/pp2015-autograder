@@ -10,7 +10,13 @@ then
   do
     #echo "문제 ${PROBLEM}번"
 
-    bash ./compile.sh $1/$PROBLEM/$PROBLEM
+    path_to_problem=""
+    if test -e $1/$PROBLEM/${PROBLEM}.c; then
+      path_to_problem=$1/$PROBLEM/$PROBLEM
+    elif test -e $1/${PROBLEM}.c; then
+      path_to_problem=$1/$PROBLEM
+    fi
+    bash ./compile.sh $path_to_problem 
 
     cnt=0
     for TEST_CASE in 1 2 3 4 
@@ -23,20 +29,45 @@ then
           4) timeout=60 ;;
         esac
       else
-        timeout=60
+        timeout=5
       fi
-      INPUT=$(cat ./test_case/$PROBLEM/${TEST_CASE}.in)
-      OUTPUT=$(gtimeout $timeout sh ./run.sh $1/$PROBLEM/$PROBLEM INPUT)
-      DESIRED=$(cat ./test_case/$PROBLEM/${TEST_CASE}.out)
 
-      OUTPUT=$(echo $OUTPUT | sed -e 's/[[:space:]]+\n/\n/g')
-      
-      if [ "$OUTPUT" == "$DESIRED" ]
-      then
-        RESULT="O"
-        cnt=$(($cnt + 1))
-      else
-        RESULT="X"
+      # start running
+      #echo begin
+      if [ $PROBLEM = 3 ]; then
+        sub_cnt=0
+        for SUB in 1 2; do
+          INPUT="./test_case/$PROBLEM/${TEST_CASE}-${SUB}.in"
+          TEXT="./test_case/$PROBLEM/${TEST_CASE}.txt"
+          OUTPUT=$(gtimeout $timeout bash ./run_3.sh $path_to_problem $TEXT $INPUT)
+          DESIRED=$(cat ./test_case/$PROBLEM/${TEST_CASE}-${SUB}.out)
+
+          if [ "$(echo $OUTPUT)" == "$(echo $DESIRED)" ]; then
+            sub_cnt=$(($sub_cnt + 1))
+          fi
+        done
+
+        if [ $sub_cnt = 2 ]; then
+          RESULT="O"
+          cnt=$(($cnt + 1))
+        else
+          RESULT="X"
+        fi
+      else # problem 1, 2, 4, 5
+        INPUT="./test_case/$PROBLEM/${TEST_CASE}.in"
+        OUTPUT=$(gtimeout $timeout sh ./run.sh $path_to_problem $INPUT)
+        DESIRED=$(cat ./test_case/$PROBLEM/${TEST_CASE}.out)
+        #echo finished  
+
+        #echo $OUTPUT
+        OUTPUT=$(echo $OUTPUT | sed -e 's/[[:space:]]+\n/\n/g')
+
+        if [ "$(echo $OUTPUT)" == "$(echo $DESIRED)" ]; then
+          RESULT="O"
+          cnt=$(($cnt + 1))
+        else
+          RESULT="X"
+        fi
       fi
       TEST_RESULT="$TEST_RESULT\"$RESULT\","
     done

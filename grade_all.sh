@@ -12,13 +12,14 @@ do
   RESULT_ALL="$RESULT_ALL,합계"
 done
 
-RESULT_ALL="$RESULT_ALL,총점"
+RESULT_ALL="$RESULT_ALL,총점\n"
 (printf $RESULT_ALL) > final_result.csv
 
 for STUDENT in ./students/*
 do
   echo ---------- $STUDENT ----------
-  RESULT=$(bash ./grade_one.sh $STUDENT)
-  RESULT_ALL="$(cat final_result.csv)\n${RESULT}"
-  (printf $RESULT_ALL) > final_result.csv
+  RESULT=$(gtimeout 3m bash ./grade_one.sh $STUDENT)
+  #RESULT_ALL="$(cat final_result.csv)\n${RESULT}"
+  #(printf $RESULT_ALL) > final_result.csv
+  echo ${RESULT} >> final_result.csv
 done
